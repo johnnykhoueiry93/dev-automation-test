@@ -1,200 +1,145 @@
-# AlayaCare Automation Skill Test
+# Introduction
 
-Welcome to AlayaCare's automation skill test.
-You have shown interest in CI/CD, automation, scripts and cloud technologies ; now it's time to put
-your skills to work.
-Given a highly simplified setup resembling ours, you will learn to get familiar with Jenkins, Docker
-and a typical deployment flow.
-Different aspects make up for the test:
+For this project, I implemented an AWS EC2 instance consisting of Ubuntu 20 amd64.
 
-- research
-- documentation
-- setup
-- scripting
+Throughout the document, some instructions will be provided regarding how to reach this public server and how to run on a local machine in case needed.
 
-Each task adds a building block to the setup, you will want to work on them sequentially.
-If you face a blocker, you should be able to move on to the next task, although you might not be
-able to test your work.
-Feel free to work around the instructions in that case, and document what you did.
-For example if you cannot load the `database.sql` script through Jenkins, you can always do it
-manually and move on.
+# Tasks Overview
+- Task 1 and task 2: Will be covered by the `docker-compose.yml`
+- Task 3 and task 4: Will be covered by the python script `deploy.py`
+- Task 5: Will be covered by `init_database.groovy` and `init_database.xml`
+- Task 6 and task 7: Will be covered by `run_migrations.groovy`, `run_migrations.xml` and `insertIntoMigrations.py`
+- Task 8 and Task 9: Will be covered by the python script `deploy.py` 
 
-**N.B.** remember to document everything you do !!
+# AWS Public Instance Setup
+Inbound ports 8080 were open to allow binding. This instance is public and reachable:
+- Browser: http://3.82.173.95:8080/
+  - Credentials will be provided separately
+- ssh: through putty
+  - user: ubuntu
+  - sudo su (no pass)
+  - a private key .ppk will be provided separately to allow access
 
-**Bonus:** throughout the test, please feel free to increment all the scripts with better logging,
-error handling and other improvements. Each task contains a goal and some guidelines, you're
-welcome to adapt them and develop them in your own way.
+# Requirements Before Setup
+For the first time setup, we need to make sure that our environment supports deploying this project.
+- `python3`
+-  `pip3`
+-  python3 MySQL connector `mysql-connector-python-rf`
+-  Docker Engine [How to install Docker engine](https://docs.docker.com/engine/install/ubuntu/)
+-  Docker Compose [How to install Docker compose](https://docs.docker.com/compose/install/)
 
-----------
+# First Time Setup
 
-## Assignment
+**Make sure you are running as root**
 
-### How to submit your work ?
-
-**/!\ You need to fork this repository.**
-
-1. Fork this repository
-2. Clone your fork locally
-3. Work
-4. Once you're done, submit a pull request to the remote repository
-5. Review your changes and validate
-
-### Delivery
-
-We are expecting the following files:
-
-- `README.md`, all the documentation you wrote
-- `Dockerfile`, for the custom Jenkins image
-- `init_database.groovy`, Groovy script to import the trunk file
-- `init_database.xml`, config file for the eponymous Jenkins job
-- `run_migrations.groovy`, Groovy script to run DB migrations
-- `run_migrations.xml`, config file for the eponymous Jenkins job
-- `deploy.py`, Python script with all the logic
-- `migration_summary`, from task 10
-- `requirements.txt` if needed
-- `docker-compose.yml` in case you have changed the original one
-
-### Overview
-
-- *a database,* contains fake tenant data
-- *a Jenkins server,* with some pipelines to run dummy DB migrations
-- *a Python CLI tool,* with logic to verify and validate tenant migrations
-
-----------
-
-## Tasks
-
-### I. Up & Running
-
-Let's get our Jenkins server and database up and running on your local.
-Everything must be dockerized.
-
-#### task 1
-
-Set up Jenkins & MySQL on your local ; you must use docker containers.
-A `docker-compose.yml` has been provided, feel free to use it / increment it.
-
-**N.B.** docker compose already creates a network with all services involved.
-That allows us to access mysql under `db` from the `jenkins` container.
-If you're running logic outside the docker-compose setup that requires communicating
-with one of its containers, you either need to retrieve the container's IP address
-or expose its port.
-
-#### task 2
-
-Install `mysql-client` and `python3` on your Jenkins server.
-Let's be classy about it : create a new docker image based on `jenkins/jenkins:lts` and install
-the packages in your derived image's `Dockerfile`.
-
-#### task 3
-
-Find a clean way to get files to your Jenkins server.
-Ideas: `docker cp`, shared mount point, git clone etc.
-You will start by sending over `database.sql`, but later on you will be uploading groovy scripts
-& python files.
-
-#### task 4
-
-Find a way to export Jenkins job configs.
-For each job you set up, a config file is generated on the Jenkins server.
-To evaluate your jobs, we need the groovy script + the job config associated.
-Out of all the files and directories created by Jenkins for a single job, we are interested in
-the one containing the parameter information etc.
+`whoami` --> root
 
 
-### II. Groovy Baby!
+### AWS Instance Setup
+- Connect using putty ssh (login as: `ubuntu`)
+- Go to project directory `cd /home/ubuntu/alayaCare`
+- Startup the project in detach mode `docker-compose up -d`
+- Verify containers are up `docker ps`
+- Connect to machine through browser [Jenkins](http://3.82.173.95:8080/)
+- user/pass provided privately
 
-Time get our hands dirty with some groovy!
-Each groovy script you write is a file, and has a corresponding Jenkins job associated that calls
-the file.
+### Local Machine Setup
+- Create a local directory `mkdir alayaCare`
+- Place all the provided files under `alayaCare`
+- Update the jenkins container in the `docker-compose.yml` to point to your local machine
+   - From `'8080:8080'` to `'127.0. 0.1:8080:8080'`
+- Startup the project in detach mode `docker-compose up -d`
+- Verify containers are up `docker ps`
+- Connect to machine through browser on http://localhost:8080
+- To get the password of the jenkins for first time install `docker logs alayacare_jenkins_1`
+- Install recommended plugins
+- Create a user/pass
+- Copy the `database.sql` to `alayacare_jenkins_1`
+- Copy the `insertIntoMigrations.py` to `alayacare_jenkins_1`
 
-#### task 5
+docker cp database.sql <jenkins_container_id>:/home/
+docker cp insertIntoMigrations.py <jenkins_container_id>:/home/
 
-Create `init_database.groovy` which will load all of `database.sql` into our DB.
-The script must be in Groovy, and will be set up in a Jenkins job called `init_database` (no parameters).
-Essentially, the script runs a `mysql` command to source the trunk file, and Groovy is simply
-the glue between that command and Jenkins.
-
-**Action:** Run the job to populate the database with initial data.
-
-#### task 6
-
-Create `run_migrations.groovy` which will run a given migration sequentially for specified tenants.
-A migration is simply an entry in the table `migrations` with a given name and tenant ID.
-The job `run_migrations` takes 2 parameters:
-
-- `TENANT_NAMES`, a CSV of tenant names (e.g. `tenant1` or `tenant1,tenant2`) ; it also accepts
-`ALL`, the equivalent of passing all tenant names
-- `MIGRATION_NAME`, a blank field accepting a string like `migr6`
-
-The job will run a dummy DB migration for the given tenants, one at a time, by doing something like:
-
-```sql
-INSERT INTO migrations(tenant_id, name) VALUES (1, 'migr6');
-```
-
-**N.B.** This task can either be done in Groovy (over a `mysql` shell command) or in Python.
-If you choose to move the migration logic to Python, you still need a Groovy script to call
-the Python logic from a Jenkins job.
-
-**Action:** Run the job a couple times to add more content to the database - worry not, the next
-tasks will help us validate each tenant's migration state.
+_The copy can be executed by the `deploy.py` script. Jumpt to the section to see how._
 
 
-#### task 7
+# Configure the Jenkins Job
+### init_database
+- Go to Jenkins
+- New Item > name as `init_database`
+- Select `Pipeline`
+- Configure
+   - Definition: Pipeline script
+   - Paste the script `run_migrations.groovy`
 
-Increment `run_migration` by adding a drop-down column `RUN_TYPE` with 2 choices: `sequential` and
-`parallel`.
-Instead of running all migrations sequentially, we now wish to run them in parallel - Jenkins
-easily supports this.
-However, Jenkins' builtin `parallel` tool doesn't allow you to limit the number of sub-processes.
-You will therefor need to change `run_migrations.groovy` to run the DB migrations for 5 tenants
-at a time when chosing the `parallel` option.
+
+### run_migrations
+- Go to Jenkins
+- New Item > name as `run_migrations`
+- Select `Pipeline`
+- Configure:
+   - Check `This project is parameterized`
+      - Add a `String Paramter` called `TENANT_NAMES`
+      - Add a `String Paramter` called `MIGRATION_NAME`
+      - Add a `Choice Paramter` called `RUN_TYPE` with values `sequential` and `parallel`
+   - Definition: Pipeline script
+   - Paste the script `run_migrations.groovy`
 
 
-### III. Python
+# Job Usage
+### init_database
+- Simple job, will require only building the database
+- Jenkins > Dashboard > init_database >  Build Now
+- The job will restore the database to its initial state and data.
+- Will override any manually entered or `run_migrations` data input
 
-You have full freedom in your choice of Python tools, packages, logging etc.
-Ideally, please use `python3`.
-All your logic must be accessible in CLI, and should fit in a single file.
+### run_migrations
+- Requires three user inputs
+- Jenkins > Dashboard > init_database >  Build with Parameters > Build
 
-#### task 8
+**Test 1:**
+- tenant1,tenant2,tenant3,tenant4,tenant5,tenant6,tenant7,tenant8,tenant9,tenant10
+- mig12
+- sequential
 
-Write Python logic that checks DB migrations for all tenants. e.g.
+**Test 2:**
+- ALL
+- mig12
+- sequential
 
-```bash
-$ python deploy.py check-migration 'migr2'
-tenant1: OK
-tenant2: OK
-tenant3: missing
-...
-```
+**Test 3:**
+- tenant1,tenant2,tenant3,tenant4,tenant5,tenant6,tenant7,tenant8,tenant9,tenant10
+- mig12
+- parallel
 
-#### task 9
+**Test 4:**
+- ALL
+- mig12
+- parallel
 
-Write Python logic that counts DB migrations for all tenants. e.g.
+# Deployer Usage
+This part will cover the usage of `deploy.py`
 
-```bash
-$ python deploy.py count-migrations
-tenant1: 5
-tenant2: 5
-tenant3: 4
-...
-```
+Some defensive mechanism where build in to make sure the user entries are correct and follow the code structure.
 
-#### task 10
+Addtional help is also provided knowing that this script will handle some of the tasks mentioned in the earlier tasks
 
-Thanks to the Python logic you just wrote, create a little report showing the current state of
-tenant migrations.
-Point out the tenant with mismatching numbers.
-The report can be a markdown document with console outputs of your scripts and / or screenshots.
-Jot down your findings, explaining why some tenants have migrations that others don't.
+python.py's functionalities are defined as follows:
+- help: provides manual for usage
+- check-migration: displays if tenant has any migration compared to an input (task #8)
+- count-migrations: displays the count of migrations per tenant (task #9)
+- transfer-to-container: transfers any file from host to a specific container's directory (task #3)
+- export-job-config: export job config file from a container to host local directory (task #4)
 
-----------
+### Usage
+- `python3 deploy.py help `
+- `python3 deploy.py check-migration migr2`
+- `python3 deploy.py count-migrations`
+- `python3 deploy.py transfer-to-container`
+- `python3 deploy.py export-job-config`
 
-## Resources
 
-- [jenkins docker image](https://github.com/jenkinsci/docker/blob/master/README.md)
-- [mysql docker image](https://hub.docker.com/_/mysql)
-- [docker compose documentation](https://docs.docker.com/compose/)
+_Any incorrect/missing argument will exit the deployer while providing the user with a root cause depending on the option(s)_
 
+
+  
