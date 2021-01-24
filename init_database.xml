@@ -1,0 +1,37 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.40">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.7.2"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.7.2">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.87">
+    <script>def DATABASE_PASSWORD = &quot;mHsJ33lF+1FZ&quot;
+def SQL_FILE_PATH = &quot;/home/database.sql&quot;
+def HOST=&quot;alayacare_db_1&quot;
+
+
+pipeline {
+  agent any
+  stages {
+    stage(&apos;Run SQL File&apos;) { // Compile and do unit testing
+      steps {
+
+                sh &quot;mysql -h ${HOST} -p${DATABASE_PASSWORD} &lt; ${SQL_FILE_PATH}&quot;
+
+      }
+    }
+  }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

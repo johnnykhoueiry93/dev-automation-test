@@ -1,0 +1,92 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.40">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.7.2"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.7.2">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>TENANT_NAMES</name>
+          <description>Input the tenant names. The format required is a CSV. Example: ten1, ten2, ten3, ten4, tenN.</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>MIGRATION_NAME</name>
+          <description>Input the desired migration name for the mentioned tenant(s).</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>RUN_TYPE</name>
+          <description></description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>sequential</string>
+              <string>parallel</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.87">
+    <script>pipeline {
+    agent any
+    stages {
+        stage(&apos;Run SQL File&apos;) {
+            steps {
+                print &quot;DEBUG: parameter TENANT_NAMES = ${TENANT_NAMES}&quot;
+                print &quot;DEBUG: parameter MIGRATION_NAME = ${MIGRATION_NAME}&quot;
+
+                script {
+                    def DATABASE_PASSWORD = &apos;mHsJ33lF+1FZ&apos;
+                    def SQL_FILE_PATH = &apos;/home/database.sql&apos;
+                    def HOST = &apos;alayacare_db_1&apos;
+
+                    def filelist=null
+                    if(&quot;$RUN_TYPE&quot; == &quot;sequential&quot;) {
+                        filelist = getChangedFilesList() // Get the array of tenants
+                        for ( def elem in filelist ) {
+                            sh &quot;python3 /home/insertIntoMigrations.py $elem $MIGRATION_NAME $RUN_TYPE&quot;
+                        }
+                    } else {
+                            sh &quot;python3 /home/insertIntoMigrations.py &apos;$TENANT_NAMES&apos; $MIGRATION_NAME $RUN_TYPE&quot;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@NonCPS
+def getChangedFilesList() {
+    String csvTenantNames = &quot;${TENANT_NAMES}&quot;
+    String[] arrayTenantNames
+    arrayTenantNames = csvTenantNames.split(&apos;,&apos;)
+
+    return arrayTenantNames
+}
+
+def insertTenantIntoDatabase(String myElem)
+{
+    print &quot;DEBUG: We are in insertTenantIntoDatabase function!!&quot;
+
+    def SQL = &quot;SELECT name FROM tenants;&quot;
+    def CMD = &quot;mysql rmtest -pmHsJ33lF+1FZ &lt;&lt;-EOF\n${SQL}\nEOF&quot;
+    sh &quot;${CMD}&quot;
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
