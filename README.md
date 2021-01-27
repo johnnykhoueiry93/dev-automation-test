@@ -47,7 +47,7 @@ For the first time setup, we need to make sure that our environment supports dep
 - Create a local directory `mkdir alayaCare`
 - Place all the provided files under `alayaCare`
 - Update the jenkins container in the `docker-compose.yml` to point to your local machine
-   - From `'8080:8080'` to `'127.0. 0.1:8080:8080'`
+   - From `'8080:8080'` to `'127.0.0.1:8080:8080'`
 - Startup the project in detach mode `docker-compose up -d`
 - Verify containers are up `docker ps`
 - Connect to machine through browser on http://localhost:8080
