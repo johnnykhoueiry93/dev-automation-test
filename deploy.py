@@ -16,7 +16,8 @@ def databaseConnection():
     return mydb
 
 
-def runCommad(string):
+def runCommand(string):
+
     command = os.popen(string)
     print(command.read())
     return print(command.read())
