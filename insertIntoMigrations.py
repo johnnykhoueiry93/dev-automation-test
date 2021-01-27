@@ -60,25 +60,6 @@ def loadAllTenantsToMigrationTableSequentially():
         loadSingleTenantSequentially(tenant[0], sys.argv[2])
 
 
-def loadTenantsParalle(array):
-    try:
-        logging.debug("Function: loadTenantsParalle")
-        logging.debug("Received array is:" + str(array))
-        mydb = datavaseConnection()
-        sqlInsert = "insert into migrations (tenant_id, name) values ({0}),'{1}')".format(
-            array, sys.argv[2])
-        mycursor = mydb.cursor()
-        mycursor.execute(sqlInsert)
-        mydb.commit()
-        mycursor.close()
-        mydb.close()
-
-        logging.debug("DEBUG: Exiting Thread responsible for: {0}")
-
-    except Exception as e:
-        logging.debug("ERROR: Exception: %s" % e)
-
-
 def sequential():
     if sys.argv[1] == "ALL":
         loadAllTenantsToMigrationTableSequentially()
@@ -114,23 +95,30 @@ def parallel(arr):
     array = []
 
     # Will return array of arrays of 5's
+    # [[1,2,3,4,5] , [6,7,8,9,10] , [11,12,13,14,15] , [16,17,18,19,20]]
     for i in range(0, len(iterableList), migrationBathSize):
         array.append(iterableList[i:i+migrationBathSize])
-        logging.debug(array)
 
-        for j in array:  # Will return first array of 5
-            logging.debug("Sending the thread with the element: " + str(j))
+    batchCounter = 0
+    # Will go over first array batch
+    # j = [1,2,3,4,5]
+    for j in array:
+        batchCounter += 1
+        logging.debug("\n######### Starting with batch #" +
+                      str(batchCounter) + " #########")
+        logging.debug("Current batch items: " + str(j))
 
-            for k in j:  # Will loop over each of the 5 items
-                logging.debug("Running Thread " + str(k))
-                t = Thread(target=loadSingleTenantSequentially,
-                           args=(convertTuple(k), sys.argv[2]))
-                threadCollection.append(t)
+        # Will go over first array batch elemet
+        # k = 1
+        for k in j:
+            logging.debug("Running Thread " + str(k))
+            t = Thread(target=loadSingleTenantSequentially,
+                       args=(convertTuple(k), sys.argv[2]))
+            threadCollection.append(t)
+            t.start()
 
-                t.start()
-
-    for thread in threadCollection:
-        thread.join()
+        for thread in threadCollection:
+            thread.join()
 
 
 def main():
