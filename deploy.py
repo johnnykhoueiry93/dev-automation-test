@@ -4,7 +4,8 @@ import os
 import subprocess
 
 
-def datavaseConnection():
+def databaseConnection():
+
     mydb = mysql.connector.connect(
         host="127.0.0.1",
         user="root",
