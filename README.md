@@ -22,9 +22,9 @@ Inbound ports 8080 were open to allow binding. This instance is public and reach
 
 # Requirements Before Setup
 For the first time setup, we need to make sure that our environment supports deploying this project.
-- `python3`
--  `pip3`
--  python3 MySQL connector `mysql-connector-python-rf`
+- `python3` 
+-  `pip3` using `apt install python3-pip`
+-  python3 MySQL connector `mysql-connector-python-rf` using `pip3 install mysql-connector-python-rf`
 -  Docker Engine [How to install Docker engine](https://docs.docker.com/engine/install/ubuntu/)
 -  Docker Compose [How to install Docker compose](https://docs.docker.com/compose/install/)
 
@@ -40,7 +40,7 @@ For the first time setup, we need to make sure that our environment supports dep
 - Go to project directory `cd /home/ubuntu/alayaCare`
 - Startup the project in detach mode `docker-compose up -d`
 - Verify containers are up `docker ps`
-- Connect to the machine through browser [Jenkins](http://3.82.173.95:8080/)
+- Connect to machine through browser [Jenkins](http://3.82.173.95:8080/)
 - user/pass provided privately
 
 ### Local Machine Setup
@@ -60,7 +60,7 @@ For the first time setup, we need to make sure that our environment supports dep
 docker cp database.sql <jenkins_container_id>:/home/
 docker cp insertIntoMigrations.py <jenkins_container_id>:/home/
 
-_The copy can be executed by the `deploy.py` script. Jump to the section to see how._
+_The copy can be executed by the `deploy.py` script. Jumpt to the section to see how._
 
 
 # Configure the Jenkins Job
@@ -117,12 +117,16 @@ _The copy can be executed by the `deploy.py` script. Jump to the section to see 
 - mig12
 - parallel
 
+**Test Results**
+- 50 Tenants -- Sequential - Took 14 sec
+- 50 Tenants -- Parallel - Took 1.3 sec
+
 # Deployer Usage
 This part will cover the usage of `deploy.py`
 
-Some defensive mechanisms were built in to make sure the user entries are correct and follow the code structure.
+Some defensive mechanism where build in to make sure the user entries are correct and follow the code structure.
 
-Additional help is also provided knowing that this script will handle some of the tasks mentioned in the earlier tasks
+Addtional help is also provided knowing that this script will handle some of the tasks mentioned in the earlier tasks
 
 python.py's functionalities are defined as follows:
 - help: provides manual for usage
@@ -140,6 +144,3 @@ python.py's functionalities are defined as follows:
 
 
 _Any incorrect/missing argument will exit the deployer while providing the user with a root cause depending on the option(s)_
-
-
-  
